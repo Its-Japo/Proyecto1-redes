@@ -1,0 +1,13 @@
+server:
+  host: "localhost"
+  port: 8080
+
+apis:
+  alphaVantage:
+    apiKey: "${ALPHA_VANTAGE_API_KEY}"
+    baseURL: "https://www.alphavantage.co/query"
+
+claude:
+  apiKey: "${ANTHROPIC_API_KEY}"
+  baseURL: "https://api.anthropic.com/v1/messages"
+  model: "claude-3-haiku-20240307"
