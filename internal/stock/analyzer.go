@@ -38,7 +38,6 @@ func (a *Analyzer) AnalyzePortfolio(symbols []string, timeframe string) (*models
 		portfolio.Stocks = append(portfolio.Stocks, analysis.Stock)
 	}
 
-	// Calculate overall portfolio metrics
 	overallScore := a.calculateOverallScore(analyses)
 	overallRisk := a.calculateOverallRisk(analyses)
 	recommendations := a.generatePortfolioRecommendations(analyses)
@@ -54,25 +53,21 @@ func (a *Analyzer) AnalyzePortfolio(symbols []string, timeframe string) (*models
 }
 
 func (a *Analyzer) AnalyzeStock(symbol, timeframe string) (*models.StockAnalysis, error) {
-	// Get current quote
 	stock, err := a.apiClient.GetQuote(symbol)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get quote: %w", err)
 	}
 
-	// Get historical data for technical analysis
 	timeSeries, err := a.apiClient.GetTimeSeries(symbol, timeframe)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get time series: %w", err)
 	}
 
-	// Calculate technical indicators
 	indicators, err := a.calculateTechnicalIndicators(symbol, timeSeries)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate indicators: %w", err)
 	}
 
-	// Generate recommendation
 	recommendation, score, reasons := a.generateRecommendation(*stock, *indicators)
 	riskLevel := a.calculateRiskLevel(*indicators, *stock)
 
@@ -91,7 +86,6 @@ func (a *Analyzer) calculateTechnicalIndicators(symbol string, timeSeries map[st
 		return nil, fmt.Errorf("insufficient data for technical analysis (need at least 50 days)")
 	}
 
-	// Convert map to sorted slice
 	dates := make([]string, 0, len(timeSeries))
 	for date := range timeSeries {
 		dates = append(dates, date)
@@ -107,7 +101,6 @@ func (a *Analyzer) calculateTechnicalIndicators(symbol string, timeSeries map[st
 		Symbol: symbol,
 	}
 
-	// Calculate Simple Moving Averages
 	if len(prices) >= 20 {
 		indicators.SMA20 = a.calculateSMA(prices, 20)
 	}
@@ -115,7 +108,6 @@ func (a *Analyzer) calculateTechnicalIndicators(symbol string, timeSeries map[st
 		indicators.SMA50 = a.calculateSMA(prices, 50)
 	}
 
-	// Calculate Exponential Moving Averages
 	if len(prices) >= 12 {
 		indicators.EMA12 = a.calculateEMA(prices, 12)
 	}
@@ -123,22 +115,17 @@ func (a *Analyzer) calculateTechnicalIndicators(symbol string, timeSeries map[st
 		indicators.EMA26 = a.calculateEMA(prices, 26)
 	}
 
-	// Calculate MACD
 	if indicators.EMA12 > 0 && indicators.EMA26 > 0 {
 		indicators.MACD = indicators.EMA12 - indicators.EMA26
-		// Simplified MACD signal (9-day EMA of MACD)
 		indicators.MACDSignal = indicators.MACD * 0.9 // Approximation
 	}
 
-	// Calculate RSI
 	if len(prices) >= 14 {
 		indicators.RSI = a.calculateRSI(prices, 14)
 	}
 
-	// Calculate Volatility (standard deviation of returns)
 	indicators.Volatility = a.calculateVolatility(prices)
 
-	// Calculate Bollinger Bands
 	if indicators.SMA20 > 0 {
 		stdDev := a.calculateStandardDeviation(prices[len(prices)-20:])
 		indicators.BollingerUpper = indicators.SMA20 + (2 * stdDev)
@@ -178,7 +165,7 @@ func (a *Analyzer) calculateEMA(prices []float64, period int) float64 {
 
 func (a *Analyzer) calculateRSI(prices []float64, period int) float64 {
 	if len(prices) <= period {
-		return 50 // Neutral RSI
+		return 50
 	}
 
 	gains := make([]float64, 0, len(prices)-1)
@@ -199,7 +186,7 @@ func (a *Analyzer) calculateRSI(prices []float64, period int) float64 {
 	avgLoss := a.calculateSMA(losses[len(losses)-period:], period)
 
 	if avgLoss == 0 {
-		return 100 // No losses, maximum RSI
+		return 100
 	}
 
 	rs := avgGain / avgLoss
@@ -217,7 +204,7 @@ func (a *Analyzer) calculateVolatility(prices []float64) float64 {
 		returns[i-1] = (prices[i] - prices[i-1]) / prices[i-1]
 	}
 
-	return a.calculateStandardDeviation(returns) * math.Sqrt(252) // Annualized volatility
+	return a.calculateStandardDeviation(returns) * math.Sqrt(252)
 }
 
 func (a *Analyzer) calculateStandardDeviation(values []float64) float64 {
@@ -245,7 +232,6 @@ func (a *Analyzer) generateRecommendation(stock models.Stock, indicators models.
 	score := 0.0
 	reasons := make([]string, 0)
 
-	// RSI Analysis
 	if indicators.RSI > 0 {
 		if indicators.RSI < 30 {
 			score += 2
@@ -259,7 +245,6 @@ func (a *Analyzer) generateRecommendation(stock models.Stock, indicators models.
 		}
 	}
 
-	// Moving Average Analysis
 	currentPrice := stock.Price
 	if indicators.SMA20 > 0 && indicators.SMA50 > 0 {
 		if currentPrice > indicators.SMA20 && indicators.SMA20 > indicators.SMA50 {
@@ -271,7 +256,6 @@ func (a *Analyzer) generateRecommendation(stock models.Stock, indicators models.
 		}
 	}
 
-	// MACD Analysis
 	if indicators.MACD != 0 && indicators.MACDSignal != 0 {
 		if indicators.MACD > indicators.MACDSignal {
 			score += 1
@@ -282,7 +266,6 @@ func (a *Analyzer) generateRecommendation(stock models.Stock, indicators models.
 		}
 	}
 
-	// Bollinger Bands Analysis
 	if indicators.BollingerUpper > 0 && indicators.BollingerLower > 0 {
 		if currentPrice < indicators.BollingerLower {
 			score += 1
@@ -293,7 +276,6 @@ func (a *Analyzer) generateRecommendation(stock models.Stock, indicators models.
 		}
 	}
 
-	// Recent Performance
 	if stock.ChangePerc > 5 {
 		score -= 0.5
 		reasons = append(reasons, "Recent strong gains may indicate short-term overvaluation")
@@ -302,7 +284,6 @@ func (a *Analyzer) generateRecommendation(stock models.Stock, indicators models.
 		reasons = append(reasons, "Recent decline may present buying opportunity")
 	}
 
-	// Determine recommendation based on score
 	var recommendation models.Recommendation
 	if score >= 3 {
 		recommendation = models.StrongBuy
@@ -316,7 +297,6 @@ func (a *Analyzer) generateRecommendation(stock models.Stock, indicators models.
 		recommendation = models.StrongSell
 	}
 
-	// Normalize score to 0-100 range
 	normalizedScore := math.Max(0, math.Min(100, (score+5)*10))
 
 	return recommendation, normalizedScore, reasons
@@ -325,19 +305,16 @@ func (a *Analyzer) generateRecommendation(stock models.Stock, indicators models.
 func (a *Analyzer) calculateRiskLevel(indicators models.TechnicalIndicators, stock models.Stock) string {
 	riskScore := 0.0
 
-	// High volatility increases risk
 	if indicators.Volatility > 0.3 {
 		riskScore += 2
 	} else if indicators.Volatility > 0.2 {
 		riskScore += 1
 	}
 
-	// Extreme RSI values indicate risk
 	if indicators.RSI > 80 || indicators.RSI < 20 {
 		riskScore += 1
 	}
 
-	// Large recent changes indicate risk
 	if math.Abs(stock.ChangePerc) > 10 {
 		riskScore += 1
 	}
@@ -391,7 +368,6 @@ func (a *Analyzer) calculateOverallRisk(analyses []models.StockAnalysis) string 
 func (a *Analyzer) generatePortfolioRecommendations(analyses []models.StockAnalysis) []string {
 	recommendations := make([]string, 0)
 
-	// Count recommendations
 	buyCount := 0
 	sellCount := 0
 	holdCount := 0
@@ -416,7 +392,6 @@ func (a *Analyzer) generatePortfolioRecommendations(analyses []models.StockAnaly
 		recommendations = append(recommendations, "Mixed signals in portfolio - maintain current positions and monitor closely")
 	}
 
-	// Risk-based recommendations
 	highRiskCount := 0
 	for _, analysis := range analyses {
 		if analysis.RiskLevel == "HIGH" {
