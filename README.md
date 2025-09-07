@@ -1,187 +1,187 @@
-# MCP Stock Analysis Project
+# Proyecto de Análisis de Acciones con MCP
 
-A comprehensive implementation of the Model Context Protocol (MCP) in Go, featuring a stock market analysis system with real-time data integration and AI-powered chatbot interface.
+Una implementación integral del Protocolo de Contexto de Modelo (MCP) en Go, que incluye un sistema de análisis del mercado de valores con integración de datos en tiempo real e interfaz de chatbot potenciada por IA.
 
-## 🎯 Project Overview
+## Resumen del Proyecto
 
-This project demonstrates the implementation of MCP (Model Context Protocol) for a university networks course (CC3067 Redes - UVG). It consists of:
+Este proyecto demuestra la implementación de MCP (Protocolo de Contexto de Modelo) para un curso universitario de redes (CC3067 Redes - UVG). Consiste en:
 
-- **MCP Chatbot Host**: Interactive chatbot with Claude AI integration
-- **Stock Analyzer MCP Server**: Local server providing stock analysis tools
-- **Financial API Integration**: Real-time market data from Alpha Vantage
-- **Technical Analysis Engine**: RSI, moving averages, MACD, Bollinger Bands
-- **Investment Recommendations**: AI-driven buy/sell/hold recommendations
+- **Host de Chatbot MCP**: Chatbot interactivo con integración de Claude AI
+- **Servidor MCP de Análisis de Acciones**: Servidor local que proporciona herramientas de análisis de acciones
+- **Integración de API Financiera**: Datos de mercado en tiempo real de Alpha Vantage
+- **Motor de Análisis Técnico**: RSI, promedios móviles, MACD, Bandas de Bollinger
+- **Recomendaciones de Inversión**: Recomendaciones de comprar/vender/mantener impulsadas por IA
 
-## 🏗️ Architecture
+## Arquitectura
 
 ```
 ┌─────────────────┐    JSON-RPC     ┌──────────────────┐    HTTP API    ┌─────────────────┐
-│   Chatbot Host  │ ◄────────────► │ Stock Analyzer   │ ◄───────────► │ Alpha Vantage   │
-│   (Claude AI)   │                │   MCP Server     │                │  Financial API  │
+│   Host Chatbot  │ ◄────────────► │ Analizador de    │ ◄───────────► │ Alpha Vantage   │
+│   (Claude AI)   │                │   Acciones MCP   │                │  API Financiera │
 └─────────────────┘                └──────────────────┘                └─────────────────┘
 ```
 
-## 🚀 Quick Start
+## Inicio Rápido
 
-### Prerequisites
+### Prerrequisitos
 
 ```bash
-# Install Go 1.21+
+# Instalar Go 1.21+
 go version
 
-# Get API keys (free)
+# Obtener claves API (gratis)
 # 1. Alpha Vantage: https://www.alphavantage.co/support/#api-key
 # 2. Anthropic Claude: https://console.anthropic.com/
 ```
 
-### Setup
+### Configuración
 
 ```bash
-# Set environment variables
-export ALPHA_VANTAGE_API_KEY="your_alpha_vantage_key"
-export ANTHROPIC_API_KEY="your_anthropic_key"
+# Configurar variables de entorno
+export ALPHA_VANTAGE_API_KEY="tu_clave_alpha_vantage"
+export ANTHROPIC_API_KEY="tu_clave_anthropic"
 
-# Install dependencies
+# Instalar dependencias
 go mod download
 
-# Build executables
+# Construir ejecutables
 ./setup.sh
 
-# Run the chatbot (auto-connects to MCP server)
+# Ejecutar el chatbot (se conecta automáticamente al servidor MCP)
 ./bin/chatbot
 
-# Or run without auto-connect for manual control
+# O ejecutar sin conexión automática para control manual
 ./bin/chatbot -no-auto-connect
 ```
 
-## 💡 Usage Examples
+## Ejemplos de Uso
 
-### Interactive Commands
-
-```bash
-🤖 MCP Stock Analysis Chatbot
-===============================
-
-💬 You: /analyze AAPL,GOOGL,MSFT
-📊 Analyzing portfolio: [AAPL GOOGL MSFT]
-✅ Analysis complete:
-
-📊 PORTFOLIO ANALYSIS REPORT
-========================================
-Portfolio: Analysis Portfolio
-Overall Score: 72.3/100
-Overall Risk: MEDIUM
-
-🏢 AAPL
-  Price: $185.64 (-1.23%)
-  Recommendation: BUY (Score: 75.0/100)
-  Risk Level: LOW
-```
-
-### Natural Language Queries
+### Comandos Interactivos
 
 ```bash
-💬 You: Should I invest in Tesla stock?
-🔍 Detected stock symbols: [TSLA]
-📈 STOCK ANALYSIS: TSLA
-==============================
-Current Price: $248.42
-Recommendation: HOLD (Score: 58.0/100)
-Risk Level: HIGH
+Chatbot de Análisis de Acciones MCP
+===================================
+
+Tú: /analyze AAPL,GOOGL,MSFT
+Analizando portafolio: [AAPL GOOGL MSFT]
+Análisis completo:
+
+REPORTE DE ANÁLISIS DE PORTAFOLIO
+=================================
+Portafolio: Portafolio de Análisis
+Puntuación General: 72.3/100
+Riesgo General: MEDIO
+
+AAPL
+  Precio: $185.64 (-1.23%)
+  Recomendación: COMPRAR (Puntuación: 75.0/100)
+  Nivel de Riesgo: BAJO
 ```
 
-## 🛠️ MCP Tools Available
+### Consultas en Lenguaje Natural
 
-| Tool | Description | Parameters |
-|------|-------------|------------|
-| `analyze_portfolio` | Analyze multiple stocks with recommendations | `symbols[]`, `timeframe` |
-| `get_stock_price` | Get current price and technical analysis | `symbol` |
-| `export_analysis` | Export results to CSV/JSON | `format`, `filename` |
+```bash
+Tú: ¿Debería invertir en acciones de Tesla?
+Símbolos de acciones detectados: [TSLA]
+ANÁLISIS DE ACCIONES: TSLA
+==========================
+Precio Actual: $248.42
+Recomendación: MANTENER (Puntuación: 58.0/100)
+Nivel de Riesgo: ALTO
+```
 
-### Connection Management Commands
+## Herramientas MCP Disponibles
 
-| Command | Description |
+| Herramienta | Descripción | Parámetros |
+|-------------|-------------|------------|
+| `analyze_portfolio` | Analizar múltiples acciones con recomendaciones | `symbols[]`, `timeframe` |
+| `get_stock_price` | Obtener precio actual y análisis técnico | `symbol` |
+| `export_analysis` | Exportar resultados a CSV/JSON | `format`, `filename` |
+
+### Comandos de Gestión de Conexión
+
+| Comando | Descripción |
 |---------|-------------|
-| `/status` | Show connection status and health check |
-| `/connect <path>` | Connect to MCP server manually |
-| `/disconnect <name>` | Disconnect from MCP server |
-| `/list` | List available tools from connected servers |
+| `/status` | Mostrar estado de conexión y verificación de salud |
+| `/connect <ruta>` | Conectar manualmente al servidor MCP |
+| `/disconnect <nombre>` | Desconectar del servidor MCP |
+| `/list` | Listar herramientas disponibles de servidores conectados |
 
-## 📊 Technical Features
+## Características Técnicas
 
-### Financial Analysis
-- **Technical Indicators**: RSI, SMA, EMA, MACD, Bollinger Bands
-- **Risk Assessment**: Volatility analysis and risk scoring
-- **Recommendation Engine**: Multi-factor scoring system
-- **Portfolio Analytics**: Diversification analysis
+### Análisis Financiero
+- **Indicadores Técnicos**: RSI, SMA, EMA, MACD, Bandas de Bollinger
+- **Evaluación de Riesgo**: Análisis de volatilidad y puntuación de riesgo
+- **Motor de Recomendaciones**: Sistema de puntuación multifactor
+- **Análisis de Portafolio**: Análisis de diversificación
 
-### MCP Implementation
-- **Pure JSON-RPC 2.0**: No external MCP SDK dependencies
-- **Streaming Protocol**: Real-time bidirectional communication
-- **Error Handling**: Comprehensive error responses
-- **Tool Discovery**: Dynamic tool registration and listing
+### Implementación MCP
+- **JSON-RPC 2.0 Puro**: Sin dependencias externas del SDK MCP
+- **Protocolo de Transmisión**: Comunicación bidireccional en tiempo real
+- **Manejo de Errores**: Respuestas de error integrales
+- **Descubrimiento de Herramientas**: Registro y listado dinámico de herramientas
 
-## 🔧 Development
+## Desarrollo
 
-### Project Structure
+### Estructura del Proyecto
 
 ```
 proyecto-mcp-bolsa/
-├── cmd/chatbot/           # Chatbot host application
+├── cmd/chatbot/           # Aplicación host del chatbot
 ├── internal/
-│   ├── mcp/              # MCP protocol implementation
-│   ├── stock/            # Stock analysis logic
-│   └── llm/              # Claude AI client
-├── pkg/models/           # Data structures
-├── servers/stock-analyzer/  # MCP server implementation
-├── examples/scenarios/   # Usage examples
-└── config.yaml          # Configuration
+│   ├── mcp/              # Implementación del protocolo MCP
+│   ├── stock/            # Lógica de análisis de acciones
+│   └── llm/              # Cliente de Claude AI
+├── pkg/models/           # Estructuras de datos
+├── servers/stock-analyzer/  # Implementación del servidor MCP
+├── examples/scenarios/   # Ejemplos de uso
+└── config.yaml          # Configuración
 ```
 
-### Building
+### Compilación
 
 ```bash
-# Create bin directory
+# Crear directorio bin
 mkdir -p bin
 
-# Build chatbot
+# Compilar chatbot
 go build -o bin/chatbot ./cmd/chatbot/
 
-# Build stock analyzer server
+# Compilar servidor analizador de acciones
 go build -o bin/stock-analyzer ./servers/stock-analyzer/
 
-# Run tests
+# Ejecutar pruebas
 go test ./...
 ```
 
-## 🌐 Network Analysis
+## Análisis de Red
 
-### Protocol Layers (OSI Model)
+### Capas de Protocolo (Modelo OSI)
 
-1. **Application Layer (7)**: MCP protocol, JSON-RPC 2.0
-2. **Presentation Layer (6)**: JSON serialization, UTF-8 encoding
-3. **Session Layer (5)**: HTTP/HTTPS sessions
-4. **Transport Layer (4)**: TCP for reliable communication
-5. **Network Layer (3)**: IP routing for API calls
-6. **Data Link Layer (2)**: Ethernet framing
-7. **Physical Layer (1)**: Network hardware
+1. **Capa de Aplicación (7)**: Protocolo MCP, JSON-RPC 2.0
+2. **Capa de Presentación (6)**: Serialización JSON, codificación UTF-8
+3. **Capa de Sesión (5)**: Sesiones HTTP/HTTPS
+4. **Capa de Transporte (4)**: TCP para comunicación confiable
+5. **Capa de Red (3)**: Enrutamiento IP para llamadas API
+6. **Capa de Enlace de Datos (2)**: Tramas Ethernet
+7. **Capa Física (1)**: Hardware de red
 
-## 📚 MCP Protocol Compliance
+## Cumplimiento del Protocolo MCP
 
-This implementation follows the official MCP specification:
-- Protocol version: 2024-11-05
-- JSON-RPC 2.0 transport
-- Standard initialization flow
-- Tool discovery and execution
-- Error handling conventions
+Esta implementación sigue la especificación oficial de MCP:
+- Versión del protocolo: 2024-11-05
+- Transporte JSON-RPC 2.0
+- Flujo de inicialización estándar
+- Descubrimiento y ejecución de herramientas
+- Convenciones de manejo de errores
 
-## 🔗 References
+## Referencias
 
-- [MCP Specification](https://modelcontextprotocol.io/specification/2025-06-18)
-- [JSON-RPC 2.0 Specification](https://www.jsonrpc.org/specification)
-- [Alpha Vantage API Documentation](https://www.alphavantage.co/documentation/)
-- [Anthropic Claude API](https://docs.anthropic.com/)
+- [Especificación MCP](https://modelcontextprotocol.io/specification/2025-06-18)
+- [Especificación JSON-RPC 2.0](https://www.jsonrpc.org/specification)
+- [Documentación API Alpha Vantage](https://www.alphavantage.co/documentation/)
+- [API Anthropic Claude](https://docs.anthropic.com/)
 
 ---
 
-**Course**: CC3067 Redes - Universidad del Valle de Guatemala
+**Curso**: CC3067 Redes - Universidad del Valle de Guatemala
