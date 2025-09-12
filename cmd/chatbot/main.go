@@ -45,7 +45,8 @@ func (c *ChatbotHost) Start() error {
 	fmt.Println("MCP Stock Analysis Chatbot")
 	fmt.Println("===============================")
 	fmt.Println("Available commands:")
-	fmt.Println("  /connect <server_path>  - Connect to MCP server")
+	fmt.Println("  /connect <server_path>  - Connect to local MCP server")
+	fmt.Println("  /connect tcp://<host:port> - Connect to remote MCP server")
 	fmt.Println("  /disconnect <server>    - Disconnect from MCP server")
 	fmt.Println("  /status                 - Show connection status")
 	fmt.Println("  /list                   - List available tools")
@@ -361,6 +362,12 @@ func (c *ChatbotHost) connectToMCPServer(serverPath string) error {
 		return nil
 	}
 
+	// Check if this is a TCP connection (format: tcp://host:port)
+	if strings.HasPrefix(serverPath, "tcp://") {
+		return c.connectToTCPServer(serverPath, serverName)
+	}
+
+	// Local process connection (existing logic)
 	var cmd []string
 	if strings.HasSuffix(serverPath, ".go") {
 		cmd = []string{"go", "run", serverPath}
@@ -384,6 +391,29 @@ func (c *ChatbotHost) connectToMCPServer(serverPath string) error {
 	c.logMCPInteraction("CONNECT", serverName, fmt.Sprintf("Connected to %s v%s", initResponse.ServerInfo.Name, initResponse.ServerInfo.Version))
 	
 	fmt.Printf("Connected to %s\n", initResponse.ServerInfo.Name)
+	return nil
+}
+
+func (c *ChatbotHost) connectToTCPServer(serverURL string, serverName string) error {
+	// Extract address from tcp://host:port format
+	address := strings.TrimPrefix(serverURL, "tcp://")
+	
+	client := mcp.NewClient(nil, c.logger) // nil command for TCP connections
+	
+	if err := client.ConnectTCP(address); err != nil {
+		return fmt.Errorf("failed to connect to %s: %w", address, err)
+	}
+
+	initResponse, err := client.Initialize()
+	if err != nil {
+		client.Close()
+		return fmt.Errorf("failed to initialize %s: %w", serverName, err)
+	}
+
+	c.mcpClients[serverName] = client
+	c.logMCPInteraction("CONNECT_TCP", serverName, fmt.Sprintf("Connected to remote %s v%s at %s", initResponse.ServerInfo.Name, initResponse.ServerInfo.Version, address))
+	
+	fmt.Printf("Connected to remote %s at %s\n", initResponse.ServerInfo.Name, address)
 	return nil
 }
 
@@ -683,7 +713,8 @@ func (c *ChatbotHost) showHelp() error {
 ==================================
 
 Connection Commands:
-  /connect <server>     Connect to MCP server (e.g., ./bin/stock-analyzer)
+  /connect <server>     Connect to local MCP server (e.g., ./bin/stock-analyzer)
+  /connect tcp://host:port Connect to remote MCP server (e.g., tcp://localhost:8080)
   /disconnect <server>  Disconnect from MCP server
   /status              Show connection status and health
 

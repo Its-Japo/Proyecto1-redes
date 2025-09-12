@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"os"
 
 	"proyecto-mcp-bolsa/pkg/models"
@@ -239,4 +240,40 @@ func (s *Server) getToolDescription(name string) string {
 func (s *Server) Run() error {
 	s.logger.Printf("Starting %s server version %s", s.name, s.version)
 	return s.HandleRequest(os.Stdin, os.Stdout)
+}
+
+// RunOnPort starts the MCP server listening on a TCP port
+func (s *Server) RunOnPort(port int) error {
+	s.logger.Printf("Starting %s server version %s on port %d", s.name, s.version, port)
+	
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return fmt.Errorf("failed to listen on port %d: %w", port, err)
+	}
+	defer listener.Close()
+
+	s.logger.Printf("MCP server listening on port %d", port)
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			s.logger.Printf("Failed to accept connection: %v", err)
+			continue
+		}
+
+		s.logger.Printf("New client connected from %s", conn.RemoteAddr())
+		go s.handleConnection(conn)
+	}
+}
+
+// handleConnection handles a single TCP connection
+func (s *Server) handleConnection(conn net.Conn) {
+	defer func() {
+		s.logger.Printf("Client %s disconnected", conn.RemoteAddr())
+		conn.Close()
+	}()
+
+	if err := s.HandleRequest(conn, conn); err != nil {
+		s.logger.Printf("Connection error: %v", err)
+	}
 }

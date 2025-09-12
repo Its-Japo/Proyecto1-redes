@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"os/exec"
 	"sync"
 	"time"
@@ -18,11 +19,13 @@ type Client struct {
 	stdin         io.WriteCloser
 	stdout        io.ReadCloser
 	stderr        io.ReadCloser
+	conn          net.Conn // for TCP connections
 	encoder       *json.Encoder
 	decoder       *json.Decoder
 	nextID        int
 	mu            sync.Mutex
 	logger        *log.Logger
+	isNetworkConn bool
 }
 
 func NewClient(serverCommand []string, logger *log.Logger) *Client {
@@ -91,6 +94,29 @@ func (c *Client) Connect() error {
 	c.decoder = json.NewDecoder(stdout)
 
 	c.logger.Printf("Connected to MCP server: %s", c.serverCommand[0])
+	return nil
+}
+
+// ConnectTCP connects to a remote MCP server via TCP
+func (c *Client) ConnectTCP(address string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.serverCmd != nil || c.conn != nil {
+		return fmt.Errorf("client already connected")
+	}
+
+	conn, err := net.Dial("tcp", address)
+	if err != nil {
+		return fmt.Errorf("failed to connect to %s: %w", address, err)
+	}
+
+	c.conn = conn
+	c.encoder = json.NewEncoder(conn)
+	c.decoder = json.NewDecoder(conn)
+	c.isNetworkConn = true
+
+	c.logger.Printf("Connected to remote MCP server: %s", address)
 	return nil
 }
 
@@ -223,6 +249,19 @@ func (c *Client) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	if c.isNetworkConn {
+		// Close TCP connection
+		if c.conn != nil {
+			c.logger.Printf("Closing TCP connection to MCP server")
+			err := c.conn.Close()
+			c.conn = nil
+			c.isNetworkConn = false
+			return err
+		}
+		return nil
+	}
+
+	// Close local process connection
 	if c.serverCmd == nil {
 		return nil
 	}

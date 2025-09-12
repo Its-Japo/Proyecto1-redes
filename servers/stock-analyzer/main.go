@@ -486,6 +486,11 @@ func (s *StockAnalyzerServer) Run() error {
 	return s.server.Run()
 }
 
+// RunOnPort starts the server listening on a TCP port
+func (s *StockAnalyzerServer) RunOnPort(port int) error {
+	return s.server.RunOnPort(port)
+}
+
 
 func (s *StockAnalyzerServer) formatEnhancedStockAnalysis(analysis *models.StockAnalysis) string {
 	var sb strings.Builder
@@ -755,7 +760,24 @@ func main() {
 	
 	server := NewStockAnalyzerServer()
 	
-	if err := server.Run(); err != nil {
-		log.Fatalf("Server error: %v", err)
+	// Check for port argument
+	if len(os.Args) > 1 {
+		// Running with port argument: ./stock-analyzer 8080
+		portStr := os.Args[1]
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			log.Fatalf("Invalid port number: %s", portStr)
+		}
+		
+		log.Printf("Starting MCP server on port %d", port)
+		if err := server.RunOnPort(port); err != nil {
+			log.Fatalf("Server error: %v", err)
+		}
+	} else {
+		// Running in stdin/stdout mode (default)
+		log.Println("Starting MCP server in stdin/stdout mode")
+		if err := server.Run(); err != nil {
+			log.Fatalf("Server error: %v", err)
+		}
 	}
 }
