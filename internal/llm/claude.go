@@ -127,3 +127,7 @@ func (c *ClaudeClient) Chat(userMessage string) (string, error) {
 
 	return response.Content[0].Text, nil
 }
+
+func (c *ClaudeClient) IsAvailable() bool {
+	return c.apiKey != ""
+}
