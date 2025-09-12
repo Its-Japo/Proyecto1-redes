@@ -246,13 +246,15 @@ func (s *Server) Run() error {
 func (s *Server) RunOnPort(port int) error {
 	s.logger.Printf("Starting %s server version %s on port %d", s.name, s.version, port)
 	
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	// Bind to all interfaces (0.0.0.0:port)
+	address := fmt.Sprintf("0.0.0.0:%d", port)
+	listener, err := net.Listen("tcp", address)
 	if err != nil {
-		return fmt.Errorf("failed to listen on port %d: %w", port, err)
+		return fmt.Errorf("failed to listen on %s: %w", address, err)
 	}
 	defer listener.Close()
 
-	s.logger.Printf("MCP server listening on port %d", port)
+	s.logger.Printf("MCP server listening on %s (all interfaces)", listener.Addr().String())
 
 	for {
 		conn, err := listener.Accept()
@@ -273,7 +275,11 @@ func (s *Server) handleConnection(conn net.Conn) {
 		conn.Close()
 	}()
 
+	s.logger.Printf("Handling connection from %s", conn.RemoteAddr())
+	
 	if err := s.HandleRequest(conn, conn); err != nil {
-		s.logger.Printf("Connection error: %v", err)
+		s.logger.Printf("Connection error from %s: %v", conn.RemoteAddr(), err)
+	} else {
+		s.logger.Printf("Connection from %s completed successfully", conn.RemoteAddr())
 	}
 }

@@ -106,7 +106,8 @@ func (c *Client) ConnectTCP(address string) error {
 		return fmt.Errorf("client already connected")
 	}
 
-	conn, err := net.Dial("tcp", address)
+	// Set connection timeout
+	conn, err := net.DialTimeout("tcp", address, 10*time.Second)
 	if err != nil {
 		return fmt.Errorf("failed to connect to %s: %w", address, err)
 	}
@@ -116,7 +117,7 @@ func (c *Client) ConnectTCP(address string) error {
 	c.decoder = json.NewDecoder(conn)
 	c.isNetworkConn = true
 
-	c.logger.Printf("Connected to remote MCP server: %s", address)
+	c.logger.Printf("TCP connection established to: %s", address)
 	return nil
 }
 
