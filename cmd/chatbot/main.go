@@ -700,10 +700,21 @@ func (c *ChatbotHost) analyzeHistoricalTrends(symbol string) error {
 
 func (c *ChatbotHost) getStockAnalyzerClient() *mcp.Client {
 	for name, client := range c.mcpClients {
-		if strings.Contains(strings.ToLower(name), "stock") || strings.Contains(strings.ToLower(name), "main.go") {
+		// Check for stock analyzer by name patterns
+		if strings.Contains(strings.ToLower(name), "stock") || 
+		   strings.Contains(strings.ToLower(name), "main.go") ||
+		   strings.Contains(name, ":8080") ||  // TCP connections on port 8080
+		   strings.Contains(name, ".") {       // IP address patterns
 			return client
 		}
 	}
+	
+	// If no specific match, return the first available client
+	// (useful for TCP connections with IP names)
+	for _, client := range c.mcpClients {
+		return client
+	}
+	
 	return nil
 }
 
